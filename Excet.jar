@@ -1,0 +1,97 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('download')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/sunnyramagiri/maven.git'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'jenkins Download  has failed', cc: '', from: '', replyTo: '', subject: 'Download failed', to: 'ramagirisunny.uk@gmail.com'
+                        exit(1)
+                    }
+                }
+            }
+        }
+        stage('Building')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'mvn package'
+                    }
+                    catch(Exception e2)
+                    {
+                        mail bcc: '', body: 'jenkins Building  has failed', cc: '', from: '', replyTo: '', subject: 'Building failed', to: 'ramagirisunny.uk@gmail.com'
+                        exit(2)
+                    }
+                }
+            }
+        }
+        stage('Deployment')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: '5b1d1cae-b1f6-40d7-b3c6-b1055ebf9e03', path: '', url: 'http://172.31.82.209:8080')], contextPath: 'sunapp', war: '**/*.war'
+                    }
+                    catch(Exception e3)
+                    {
+                        mail bcc: '', body: 'jenkins Deployment  has failed', cc: '', from: '', replyTo: '', subject: 'Deployment failed', to: 'ramagirisunny.uk@gmail.com'
+                        exit(3)
+                    }
+                }
+            }
+        }
+        stage('testing')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/IntelliqDevops/FunctionalTesting.git'
+                        sh 'java -jar /var/lib/jenkins/workspace/declatpipeline/testing.jar'
+                    }
+                    catch(Exception e4)
+                    {
+                        mail bcc: '', body: 'jenkins testing  has failed', cc: '', from: '', replyTo: '', subject: 'testing failed', to: 'ramagirisunny.uk@gmail.com'
+                        exit(4)
+                    }
+                }
+            }
+        }
+        stage('Delivary')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: '5b1d1cae-b1f6-40d7-b3c6-b1055ebf9e03', path: '', url: 'http://52.90.237.205:8080')], contextPath: 'app', war: '**/*.war'
+                    }
+                    catch(Exception e5)
+                    {
+                        mail bcc: '', body: 'jenkins Delivary has failed', cc: '', from: '', replyTo: '', subject: 'Delivary failed', to: 'ramagirisunny.uk@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
